@@ -58,18 +58,18 @@ function AuditLog() {
 
   return (
     <PageLayout title="Audit Log">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+      <div className="page-top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
         <div>
           <h2 className="page-title">Audit Log</h2>
           <p className="page-subtitle">Track all file actions in your department.</p>
         </div>
-        <button className="btn btn-secondary btn-sm" onClick={exportCSV}>
+        <button className="btn btn-secondary btn-sm" onClick={exportCSV} style={{ flexShrink: 0 }}>
           <Download size={14} /> Export CSV
         </button>
       </div>
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div className="filter-bar" style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
         <select className="input" value={action} onChange={e => { setAction(e.target.value); setPage(1); }} style={{ maxWidth: 220 }}>
           {ACTIONS.map(a => <option key={a}>{a}</option>)}
         </select>
@@ -94,30 +94,30 @@ function AuditLog() {
               <thead>
                 <tr>
                   <th>Timestamp</th>
-                  <th>User</th>
+                  <th className="hide-mobile">User</th>
                   <th>Action</th>
                   <th>File</th>
-                  <th>Department</th>
-                  <th>IP Address</th>
+                  <th className="hide-mobile">Department</th>
+                  <th className="hide-mobile">IP Address</th>
                 </tr>
               </thead>
               <tbody>
                 {logs.map(log => (
                   <tr key={log.logId}>
-                    <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                      {log.timestamp ? format(new Date(log.timestamp), 'dd MMM yyyy HH:mm') : '—'}
+                    <td style={{ fontSize: '0.78rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                      {log.timestamp ? format(new Date(log.timestamp), 'dd MMM yy HH:mm') : '—'}
                     </td>
-                    <td style={{ fontSize: '0.875rem' }}>{log.userEmail || '—'}</td>
+                    <td className="hide-mobile" style={{ fontSize: '0.82rem' }}>{log.userEmail || '—'}</td>
                     <td>
-                      <span className={`badge ${ACTION_BADGE[log.action] || 'badge-grey'}`}>
+                      <span className={`badge ${ACTION_BADGE[log.action] || 'badge-grey'}`} style={{ fontSize: '0.68rem' }}>
                         {log.action}
                       </span>
                     </td>
-                    <td style={{ fontSize: '0.875rem', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ fontSize: '0.82rem', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {log.fileName || '—'}
                     </td>
-                    <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{log.department || '—'}</td>
-                    <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                    <td className="hide-mobile" style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{log.department || '—'}</td>
+                    <td className="hide-mobile" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                       {log.ipAddress || '—'}
                     </td>
                   </tr>

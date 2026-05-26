@@ -239,9 +239,7 @@ tbody tr:hover { background: #f8fafc; }
     box-shadow: 4px 0 24px rgba(0,0,0,.25);
   }
 
-  .page-header {
-    left: 0 !important;
-  }
+  .page-header { left: 0 !important; }
 
   .page-content {
     margin-left: 0 !important;
@@ -252,11 +250,42 @@ tbody tr:hover { background: #f8fafc; }
 
   .header-search { display: none; }
 
-  /* Stack 2-col grids to 1-col on small screens */
+  /* Stack 2-col grids to 1-col */
   .responsive-grid-2 { grid-template-columns: 1fr !important; }
+
+  /* Hide non-essential table columns */
+  .hide-mobile { display: none !important; }
+
+  /* Wrap flex headers on mobile */
+  .page-top-bar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  /* Reduce card padding */
+  .card { padding: 16px; }
+
+  /* Filters wrap naturally */
+  .filter-bar { gap: 8px !important; }
+  .filter-bar .input { max-width: 100% !important; flex: 1 1 140px; }
+
+  /* Make action buttons smaller */
+  th, td { padding: 10px 10px !important; }
+
+  /* Stat value smaller on mobile */
+  .stat-value { font-size: 1.5rem; }
+
+  /* Upload max-width full */
+  .upload-container { max-width: 100% !important; }
+
+  /* Admin panel add dept grid */
+  .dept-form-grid { grid-template-columns: 1fr !important; }
 }
 
 @media (max-width: 480px) {
   .stats-grid { grid-template-columns: 1fr; }
   .page-title { font-size: 1.2rem; }
+  .stat-value { font-size: 1.3rem; }
+  th, td { padding: 8px 8px !important; font-size: 0.8rem !important; }
 }

@@ -178,21 +178,21 @@ function AdminPanel() {
                 <thead>
                   <tr>
                     <th>Email</th>
-                    <th>Department</th>
+                    <th className="hide-mobile">Department</th>
                     <th>Role</th>
-                    <th>Joined</th>
+                    <th className="hide-mobile">Joined</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.map(u => (
                     <tr key={u.userId}>
-                      <td style={{ fontWeight: 500 }}>{u.email}</td>
-                      <td>{u.department || '—'}</td>
+                      <td style={{ fontWeight: 500, fontSize: '0.82rem' }}>{u.email}</td>
+                      <td className="hide-mobile">{u.department || '—'}</td>
                       <td>
                         <span className={`badge ${ROLE_BADGE[u.role] || 'badge-grey'}`}>{u.role}</span>
                       </td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{u.createdAt ? u.createdAt.slice(0, 10) : '—'}</td>
+                      <td className="hide-mobile" style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{u.createdAt ? u.createdAt.slice(0, 10) : '—'}</td>
                       <td>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                           {role === 'SystemAdmin' && (
@@ -227,7 +227,7 @@ function AdminPanel() {
           {role === 'SystemAdmin' && (
             <form onSubmit={handleAddDept} className="card" style={{ marginBottom: 20 }}>
               <h3 style={{ fontWeight: 700, marginBottom: 16 }}>Add Department</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: 12, alignItems: 'flex-end' }}>
+              <div className="dept-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: 12, alignItems: 'flex-end' }}>
                 <div>
                   <label className="input-label">Name</label>
                   <input className="input" placeholder="e.g. Physics" value={newDept.name} onChange={e => setNewDept(p => ({ ...p, name: e.target.value }))} required />

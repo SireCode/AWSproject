@@ -85,7 +85,7 @@ function Upload() {
       <h2 className="page-title">Upload Documents</h2>
       <p className="page-subtitle">Upload files to your department's document library.</p>
 
-      <div style={{ maxWidth: 680 }}>
+      <div className="upload-container" style={{ maxWidth: 680 }}>
         {/* Drop zone */}
         <div
           {...getRootProps()}

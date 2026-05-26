@@ -82,7 +82,7 @@ function Documents() {
       <p className="page-subtitle">Browse and manage files in your department.</p>
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div className="filter-bar" style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
         <input
           className="input"
           placeholder="Search files…"
@@ -110,8 +110,8 @@ function Documents() {
                 <tr>
                   <th>Name</th>
                   <th>Type</th>
-                  <th>Size</th>
-                  <th>Uploaded By</th>
+                  <th className="hide-mobile">Size</th>
+                  <th className="hide-mobile">Uploaded By</th>
                   <th>Date</th>
                   <th>Actions</th>
                 </tr>
@@ -126,11 +126,11 @@ function Documents() {
                       </div>
                     </td>
                     <td><span className="badge badge-blue">{file.category}</span></td>
-                    <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                    <td className="hide-mobile" style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
                       {file.fileSize ? `${(file.fileSize / 1024 / 1024).toFixed(1)} MB` : '—'}
                     </td>
-                    <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{file.uploadedByEmail || '—'}</td>
-                    <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                    <td className="hide-mobile" style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{file.uploadedByEmail || '—'}</td>
+                    <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
                       {file.uploadedAt ? format(new Date(file.uploadedAt), 'dd MMM yyyy') : '—'}
                     </td>
                     <td>

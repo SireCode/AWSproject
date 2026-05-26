@@ -82,7 +82,7 @@ function Dashboard() {
       </div>
 
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div className="page-top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h3 style={{ fontWeight: 700, fontSize: '1rem' }}>Recent Files</h3>
           {['StaffMember', 'DepartmentAdmin', 'SystemAdmin'].includes(role) && (
             <button className="btn btn-primary btn-sm" onClick={() => navigate('/upload')}>
@@ -107,9 +107,9 @@ function Dashboard() {
                 <tr>
                   <th>Name</th>
                   <th>Category</th>
-                  <th>Uploaded By</th>
+                  <th className="hide-mobile">Uploaded By</th>
                   <th>Date</th>
-                  <th>Size</th>
+                  <th className="hide-mobile">Size</th>
                 </tr>
               </thead>
               <tbody>
@@ -118,15 +118,15 @@ function Dashboard() {
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <FileIcon fileName={file.fileName} />
-                        <span style={{ fontWeight: 500 }}>{file.fileName}</span>
+                        <span style={{ fontWeight: 500, fontSize: '0.82rem' }}>{file.fileName}</span>
                       </div>
                     </td>
                     <td><span className="badge badge-blue">{file.category}</span></td>
-                    <td style={{ color: 'var(--text-muted)' }}>{file.uploadedByEmail || '—'}</td>
-                    <td style={{ color: 'var(--text-muted)' }}>
+                    <td className="hide-mobile" style={{ color: 'var(--text-muted)' }}>{file.uploadedByEmail || '—'}</td>
+                    <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                       {file.uploadedAt ? format(new Date(file.uploadedAt), 'dd MMM yyyy') : '—'}
                     </td>
-                    <td style={{ color: 'var(--text-muted)' }}>
+                    <td className="hide-mobile" style={{ color: 'var(--text-muted)' }}>
                       {file.fileSize ? `${(file.fileSize / 1024 / 1024).toFixed(1)} MB` : '—'}
                     </td>
                   </tr>
