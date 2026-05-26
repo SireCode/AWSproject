@@ -286,6 +286,10 @@ tbody tr:hover { background: #f8fafc; }
   /* Upload max-width full */
   .upload-container { max-width: 100% !important; }
 
+  /* Swap drag & drop hint for mobile-friendly text */
+  .drag-hint { display: none !important; }
+  .drag-hint-mobile { display: block !important; }
+
   /* Admin panel add dept grid */
   .dept-form-grid { grid-template-columns: 1fr !important; }
 }

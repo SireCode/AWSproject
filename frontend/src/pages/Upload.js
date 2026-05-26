@@ -103,10 +103,13 @@ function Upload() {
           <input {...getInputProps()} />
           <CloudUpload size={40} color={isDragActive ? 'var(--primary)' : '#94a3b8'} style={{ margin: '0 auto 12px', display: 'block' }} />
           <p style={{ fontWeight: 600, color: isDragActive ? 'var(--primary)' : 'var(--text)' }}>
-            {isDragActive ? 'Drop files here' : 'Drag & drop files here'}
+            {isDragActive ? 'Drop files here' : 'Tap to browse files'}
           </p>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 6 }}>
-            or click to browse — PDF, Word, Excel, PowerPoint, Images — max 50 MB each
+          <p className="drag-hint" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 6 }}>
+            or drag & drop — PDF, Word, Excel, PowerPoint, Images — max 50 MB each
+          </p>
+          <p className="drag-hint-mobile" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 6, display: 'none' }}>
+            PDF, Word, Excel, PowerPoint, Images — max 50 MB each
           </p>
         </div>
 
