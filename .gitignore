@@ -1,0 +1,10 @@
+node_modules/
+*/node_modules/
+frontend/build/
+.env
+*.env
+.aws-sam/
+infrastructure/samconfig.toml
+.DS_Store
+Thumbs.db
+*.log
