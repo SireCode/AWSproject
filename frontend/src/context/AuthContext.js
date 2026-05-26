@@ -28,10 +28,14 @@ export function AuthProvider({ children }) {
 
       const resolvedRole = extractRoleFromGroups(groups);
 
+      const email = attributes.email || '';
+      const displayName = attributes.name || email.split('@')[0];
+
       setUser({
         userId: cognitoUser.userId,
         username: cognitoUser.username,
-        email: attributes.email,
+        name: displayName,
+        email,
         department: attributes['custom:department'] || '',
       });
       setRole(resolvedRole);

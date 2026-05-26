@@ -16,27 +16,41 @@ exports.handler = async (event) => {
     const category = qs.category;
     const lastKey = qs.lastKey ? JSON.parse(decodeURIComponent(qs.lastKey)) : undefined;
 
-    const dept = user.role === 'SystemAdmin' && qs.department
-      ? qs.department
-      : user.department;
+    const dept = qs.department || user.department;
+    const isAdminWithNoDept = user.role === 'SystemAdmin' && !dept;
 
-    let filterExpr = '';
-    const exprAttrVals = { ':dept': dept };
-
-    if (category) {
-      filterExpr = 'category = :cat';
-      exprAttrVals[':cat'] = category;
+    let result;
+    if (isAdminWithNoDept) {
+      // SystemAdmin with no department filter — return all documents
+      const filterParts = [];
+      const exprAttrVals = {};
+      if (category) {
+        filterParts.push('category = :cat');
+        exprAttrVals[':cat'] = category;
+      }
+      result = await db.scan('documents', {
+        FilterExpression: filterParts.length ? filterParts.join(' AND ') : undefined,
+        ExpressionAttributeValues: Object.keys(exprAttrVals).length ? exprAttrVals : undefined,
+        Limit: limit,
+        ExclusiveStartKey: lastKey,
+      });
+    } else {
+      const exprAttrVals = { ':dept': dept };
+      let filterExpr = '';
+      if (category) {
+        filterExpr = 'category = :cat';
+        exprAttrVals[':cat'] = category;
+      }
+      result = await db.query('documents', {
+        IndexName: 'department-date-index',
+        KeyConditionExpression: 'department = :dept',
+        ExpressionAttributeValues: exprAttrVals,
+        FilterExpression: filterExpr || undefined,
+        Limit: limit,
+        ExclusiveStartKey: lastKey,
+        ScanIndexForward: false,
+      });
     }
-
-    const result = await db.query('documents', {
-      IndexName: 'department-date-index',
-      KeyConditionExpression: 'department = :dept',
-      ExpressionAttributeValues: exprAttrVals,
-      FilterExpression: filterExpr || undefined,
-      Limit: limit,
-      ExclusiveStartKey: lastKey,
-      ScanIndexForward: false,
-    });
 
     const filtered = result.items.filter(doc => {
       const allowed = ACCESS_ROLE[doc.accessLevel] || ACCESS_ROLE['Department Only'];

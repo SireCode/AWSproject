@@ -30,7 +30,7 @@ function Upload() {
   const [meta, setMeta] = useState({ category: 'Academic', description: '', accessLevel: 'Department Only' });
   const [progress, setProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
-  const [done, setDone] = useState(false);
+  const [, setDone] = useState(false);
 
   const onDrop = useCallback(accepted => {
     setFiles(prev => [...prev, ...accepted]);
@@ -136,7 +136,7 @@ function Upload() {
 
         {/* Metadata */}
         <form onSubmit={handleUpload} className="card">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+          <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="input-label">Category</label>
               <select className="input" value={meta.category} onChange={e => setMeta(p => ({ ...p, category: e.target.value }))}>

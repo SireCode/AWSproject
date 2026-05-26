@@ -22,6 +22,59 @@ exports.handler = async (event) => {
   try {
     const user = extractUser(event);
 
+    // POST /users — admin creates a new user
+    if (method === 'POST' && !userId) {
+      requireRole(user, ['SystemAdmin']);
+      const body = JSON.parse(event.body || '{}');
+      const { fullName, email, department, role: newRole } = body;
+      console.log('[createUser] body:', JSON.stringify({ fullName, email, department, role: newRole }));
+      if (!fullName || !email || !department || !newRole) {
+        return res.badRequest('fullName, email, department, and role are required.');
+      }
+
+      let cognitoUsername;
+      try {
+        const createRes = await cognito.send(new AdminCreateUserCommand({
+          UserPoolId: USER_POOL_ID,
+          Username: email,
+          UserAttributes: [
+            { Name: 'email', Value: email },
+            { Name: 'email_verified', Value: 'true' },
+            { Name: 'name', Value: fullName },
+            { Name: 'custom:department', Value: department },
+          ],
+          DesiredDeliveryMediums: ['EMAIL'],
+        }));
+        cognitoUsername = createRes.User.Username;
+        console.log('[createUser] Cognito user created:', cognitoUsername);
+      } catch (cognitoErr) {
+        console.error('[createUser] AdminCreateUser failed:', cognitoErr.name, cognitoErr.message);
+        if (cognitoErr.name === 'UsernameExistsException') {
+          return res.badRequest('A user with this email already exists.');
+        }
+        throw cognitoErr;
+      }
+
+      await cognito.send(new AdminAddUserToGroupCommand({
+        UserPoolId: USER_POOL_ID,
+        Username: email,
+        GroupName: newRole,
+      }));
+
+      const newUserId = uuid();
+      await db.put('users', {
+        userId: newUserId,
+        email,
+        name: fullName,
+        department,
+        role: newRole,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+      });
+
+      return res.ok({ success: true, userId: newUserId });
+    }
+
     // GET /users
     if (method === 'GET' && !userId) {
       requireRole(user, ['DepartmentAdmin', 'SystemAdmin']);

@@ -21,31 +21,38 @@ const ROLE_COLORS = {
   Viewer: '#64748b',
 };
 
-function Sidebar() {
+function Sidebar({ isOpen, onClose }) {
   const { user, role, logout } = useAuth();
   const navigate = useNavigate();
 
-  const initials = user?.username
-    ? user.username.slice(0, 2).toUpperCase()
-    : '??';
+  const initials = user?.name
+    ? user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+    : (user?.email?.[0] || '?').toUpperCase();
 
   async function handleLogout() {
     await logout();
     navigate('/login');
   }
 
+  function handleNavClick() {
+    onClose();
+  }
+
   return (
-    <aside style={{
-      width: 'var(--sidebar-width)',
-      background: 'var(--dark)',
-      height: '100vh',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      zIndex: 100,
-    }}>
+    <aside
+      className={`sidebar ${isOpen ? 'open' : ''}`}
+      style={{
+        width: 'var(--sidebar-width)',
+        background: 'var(--dark)',
+        height: '100vh',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        zIndex: 100,
+      }}
+    >
       {/* Brand */}
       <div style={{ padding: '24px 20px 16px', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
         <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.01em' }}>
@@ -65,6 +72,7 @@ function Sidebar() {
               key={to}
               to={to}
               end={to === '/'}
+              onClick={handleNavClick}
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
@@ -100,7 +108,7 @@ function Sidebar() {
           </div>
           <div style={{ overflow: 'hidden' }}>
             <div style={{ color: '#f1f5f9', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {user?.username || 'User'}
+              {user?.name || user?.email || 'User'}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
               <span style={{

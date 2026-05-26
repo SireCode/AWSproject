@@ -10,12 +10,24 @@ api.interceptors.request.use(async (config) => {
   try {
     const session = await fetchAuthSession();
     const token = session?.tokens?.idToken?.toString();
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-  } catch {
-    // unauthenticated request — let it through
+    if (token) {
+      config.headers.Authorization = token;
+    } else {
+      console.warn('[API] No ID token available');
+    }
+  } catch (err) {
+    console.error('[API] Failed to get auth session:', err);
   }
   return config;
 });
+
+api.interceptors.response.use(
+  res => res,
+  err => {
+    console.error('[API] Error:', err.response?.status, err.response?.data, err.config?.url);
+    return Promise.reject(err);
+  }
+);
 
 export const filesAPI = {
   list: (params) => api.get('/files', { params }),
@@ -34,6 +46,7 @@ export const departmentsAPI = {
 
 export const usersAPI = {
   list: (params) => api.get('/users', { params }),
+  create: (body) => api.post('/users', body),
   updateRole: (userId, role) => api.put(`/users/${userId}/role`, { role }),
   delete: (userId) => api.delete(`/users/${userId}`),
 };

@@ -32,6 +32,7 @@ Globals:
       AllowOrigin: "'*'"
     Auth:
       DefaultAuthorizer: CognitoAuthorizer
+      AddDefaultAuthorizerToCorsPreflight: false
       Authorizers:
         CognitoAuthorizer:
           UserPoolArn: arn:aws:cognito-idp:us-east-1:028417007472:userpool/us-east-1_O9B0oWl3v
@@ -207,6 +208,11 @@ Resources:
           Properties:
             Path: /users
             Method: GET
+        PostUser:
+          Type: Api
+          Properties:
+            Path: /users
+            Method: POST
         PutUserRole:
           Type: Api
           Properties:

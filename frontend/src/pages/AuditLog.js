@@ -38,7 +38,7 @@ function AuditLog() {
     finally { setLoading(false); }
   }
 
-  useEffect(() => { loadLogs(); }, [action, startDate, endDate]);
+  useEffect(() => { loadLogs(); }, [action, startDate, endDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function exportCSV() {
     const header = 'Timestamp,User,Action,File,Department,IP\n';

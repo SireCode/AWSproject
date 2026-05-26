@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, UserCog } from 'lucide-react';
+import { Plus, Trash2, UserPlus } from 'lucide-react';
 import PageLayout from '../components/layout/PageLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
@@ -9,9 +9,20 @@ import { usersAPI, departmentsAPI } from '../services/api';
 const ROLES = ['Viewer', 'StaffMember', 'DepartmentAdmin', 'SystemAdmin'];
 const ROLE_BADGE = { SystemAdmin: 'badge-orange', DepartmentAdmin: 'badge-purple', StaffMember: 'badge-green', Viewer: 'badge-grey' };
 
+const DEPARTMENTS = [
+  'Computer Science', 'Physics', 'Mathematics', 'Chemistry', 'Statistics',
+  'Biology', 'Biochemistry', 'Geology', 'Economics', 'Accounting',
+  'Business Administration', 'English', 'History', 'Other',
+];
+
 function AdminPanel() {
   const { role } = useAuth();
   const [tab, setTab] = useState('users');
+
+  // Create user state
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [newUser, setNewUser] = useState({ fullName: '', email: '', department: '', role: 'StaffMember' });
+  const [creating, setCreating] = useState(false);
 
   // Users state
   const [users, setUsers] = useState([]);
@@ -44,6 +55,22 @@ function AdminPanel() {
       setDepartments(res.data?.departments || []);
     } catch { setDepartments([]); }
     finally { setDeptsLoading(false); }
+  }
+
+  async function handleCreateUser(e) {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      await usersAPI.create(newUser);
+      toast.success(`Account created for ${newUser.email}. They will receive a temporary password by email.`);
+      setNewUser({ fullName: '', email: '', department: '', role: 'StaffMember' });
+      setShowCreateUser(false);
+      loadUsers();
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to create user.');
+    } finally {
+      setCreating(false);
+    }
   }
 
   async function handleRoleChange(userId, newRole) {
@@ -96,6 +123,50 @@ function AdminPanel() {
       </div>
 
       {tab === 'users' && (
+        <div>
+        {role === 'SystemAdmin' && (
+          <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+            <button className="btn btn-primary" onClick={() => setShowCreateUser(v => !v)}>
+              <UserPlus size={15} /> {showCreateUser ? 'Cancel' : 'Create User'}
+            </button>
+          </div>
+        )}
+
+        {showCreateUser && (
+          <form onSubmit={handleCreateUser} className="card" style={{ marginBottom: 20 }}>
+            <h3 style={{ fontWeight: 700, marginBottom: 16 }}>New User Account</h3>
+            <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="input-label">Full Name</label>
+                <input className="input" placeholder="John Doe" required
+                  value={newUser.fullName} onChange={e => setNewUser(p => ({ ...p, fullName: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="input-label">Email Address</label>
+                <input className="input" type="email" placeholder="user@eksu.edu.ng" required
+                  value={newUser.email} onChange={e => setNewUser(p => ({ ...p, email: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="input-label">Department</label>
+                <select className="input" required value={newUser.department} onChange={e => setNewUser(p => ({ ...p, department: e.target.value }))}>
+                  <option value="">Select department…</option>
+                  {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
+                </select>
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="input-label">Role</label>
+                <select className="input" value={newUser.role} onChange={e => setNewUser(p => ({ ...p, role: e.target.value }))}>
+                  {ROLES.map(r => <option key={r}>{r}</option>)}
+                </select>
+              </div>
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={creating}>
+              {creating ? <LoadingSpinner size="sm" /> : <UserPlus size={15} />}
+              {creating ? 'Creating…' : 'Create Account'}
+            </button>
+          </form>
+        )}
+
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           {usersLoading ? (
             <div style={{ padding: 48, textAlign: 'center' }}><LoadingSpinner /></div>
@@ -147,6 +218,7 @@ function AdminPanel() {
               </table>
             </div>
           )}
+        </div>
         </div>
       )}
 

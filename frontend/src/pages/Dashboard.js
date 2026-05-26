@@ -67,7 +67,7 @@ function Dashboard() {
     <PageLayout title="Dashboard">
       <div style={{ marginBottom: 24 }}>
         <h2 className="page-title">
-          {greeting()}, {user?.username || 'User'} 👋
+          {greeting()}, {user?.name || 'User'} 👋
         </h2>
         <p className="page-subtitle">
           Here's an overview of your department's file activity.

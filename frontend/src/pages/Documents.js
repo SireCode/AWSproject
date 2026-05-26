@@ -2,21 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Download, Trash2, Share2, FolderOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'react-router-dom';
 import PageLayout from '../components/layout/PageLayout';
 import FileIcon from '../components/common/FileIcon';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
 import { filesAPI } from '../services/api';
-import { uploadFileToS3 } from '../services/fileUpload';
 
 const CATEGORIES = ['All', 'Academic', 'Administrative', 'Research', 'Financial', 'Correspondence', 'Other'];
 const PAGE_SIZE = 10;
 
 function Documents() {
-  const { user, role } = useAuth();
+  const { role } = useAuth();
+  const [searchParams] = useSearchParams();
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(searchParams.get('search') || '');
   const [category, setCategory] = useState('All');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -36,7 +37,7 @@ function Documents() {
     }
   }
 
-  useEffect(() => { loadFiles(); }, [category]);
+  useEffect(() => { loadFiles(); }, [category]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleDownload(file) {
     try {
