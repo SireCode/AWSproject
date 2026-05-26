@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: CBDFS - Cloud-Based Departmental File System
+Description: CBDFS - Cloud-Based Departmental File System (Lambda + API Gateway)
 
 Parameters:
   Environment:
@@ -15,14 +15,14 @@ Globals:
     MemorySize: 256
     Environment:
       Variables:
-        USERS_TABLE: !Ref UsersTable
-        DOCUMENTS_TABLE: !Ref DocumentsTable
-        DEPARTMENTS_TABLE: !Ref DepartmentsTable
-        AUDIT_LOG_TABLE: !Ref AuditLogTable
-        ACCESS_POLICY_TABLE: !Ref AccessPolicyTable
-        SHARED_DOCUMENTS_TABLE: !Ref SharedDocumentsTable
-        DOCUMENTS_BUCKET: !Ref DocumentsBucket
-        USER_POOL_ID: !Ref UserPool
+        USERS_TABLE: cbdfs-users
+        DOCUMENTS_TABLE: cbdfs-documents
+        DEPARTMENTS_TABLE: cbdfs-departments
+        AUDIT_LOG_TABLE: cbdfs-audit-log
+        ACCESS_POLICY_TABLE: cbdfs-access-policy
+        SHARED_DOCUMENTS_TABLE: cbdfs-shared-documents
+        DOCUMENTS_BUCKET: dept-file-system-documents-028417007472
+        USER_POOL_ID: us-east-1_O9B0oWl3v
         SES_SENDER_EMAIL: michaeljames5595@gmail.com
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
   Api:
@@ -34,180 +34,57 @@ Globals:
       DefaultAuthorizer: CognitoAuthorizer
       Authorizers:
         CognitoAuthorizer:
-          UserPoolArn: !GetAtt UserPool.Arn
+          UserPoolArn: arn:aws:cognito-idp:us-east-1:028417007472:userpool/us-east-1_O9B0oWl3v
 
 Resources:
 
-  # ── Cognito User Pool ──────────────────────────────────────────
-  UserPool:
-    Type: AWS::Cognito::UserPool
+  # ── Lambda IAM Role (shared) ────────────────────────────────────
+  LambdaRole:
+    Type: AWS::IAM::Role
     Properties:
-      UserPoolName: cbdfs-user-pool
-      AutoVerifiedAttributes: [email]
-      UsernameAttributes: [email]
+      RoleName: cbdfs-lambda-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-        PasswordPolicy:
-          MinimumLength: 8
-          RequireUppercase: true
-          RequireLowercase: true
-          RequireNumbers: true
-          RequireSymbols: false
-      Schema:
-        - Name: email
-          AttributeDataType: String
-          Required: true
-          Mutable: true
-        - Name: department
-          AttributeDataType: String
-          Required: false
-          Mutable: true
-          StringAttributeConstraints:
-            MinLength: "0"
-            MaxLength: "100"
-      LambdaConfig:
-        PostConfirmation: !GetAtt PostConfirmationFunction.Arn
-
-  UserPoolClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      ClientName: cbdfs-web-client
-      UserPoolId: !Ref UserPool
-      GenerateSecret: false
-      ExplicitAuthFlows:
-        - ALLOW_USER_PASSWORD_AUTH
-        - ALLOW_REFRESH_TOKEN_AUTH
-        - ALLOW_USER_SRP_AUTH
-
-  # ── S3 Buckets ─────────────────────────────────────────────────
-  DocumentsBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub dept-file-system-documents-028417007472
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        IgnorePublicAcls: true
-        BlockPublicPolicy: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: Enabled
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      CorsConfiguration:
-        CorsRules:
-          - AllowedHeaders: ['*']
-            AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
-            AllowedOrigins: ['*']
-            MaxAge: 3000
-
-  # ── DynamoDB Tables ────────────────────────────────────────────
-  UsersTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: cbdfs-users
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: userId
-          AttributeType: S
-        - AttributeName: department
-          AttributeType: S
-      KeySchema:
-        - AttributeName: userId
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: department-index
-          KeySchema:
-            - AttributeName: department
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-
-  DocumentsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: cbdfs-documents
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: documentId
-          AttributeType: S
-        - AttributeName: department
-          AttributeType: S
-        - AttributeName: uploadedAt
-          AttributeType: S
-      KeySchema:
-        - AttributeName: documentId
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: department-date-index
-          KeySchema:
-            - AttributeName: department
-              KeyType: HASH
-            - AttributeName: uploadedAt
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-
-  DepartmentsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: cbdfs-departments
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: departmentId
-          AttributeType: S
-      KeySchema:
-        - AttributeName: departmentId
-          KeyType: HASH
-
-  AuditLogTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: cbdfs-audit-log
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: logId
-          AttributeType: S
-        - AttributeName: department
-          AttributeType: S
-        - AttributeName: timestamp
-          AttributeType: S
-      KeySchema:
-        - AttributeName: logId
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: department-time-index
-          KeySchema:
-            - AttributeName: department
-              KeyType: HASH
-            - AttributeName: timestamp
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-
-  AccessPolicyTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: cbdfs-access-policy
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: policyId
-          AttributeType: S
-      KeySchema:
-        - AttributeName: policyId
-          KeyType: HASH
-
-  SharedDocumentsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: cbdfs-shared-documents
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: shareId
-          AttributeType: S
-      KeySchema:
-        - AttributeName: shareId
-          KeyType: HASH
+        - PolicyName: cbdfs-lambda-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - arn:aws:dynamodb:us-east-1:028417007472:table/cbdfs-*
+                  - arn:aws:dynamodb:us-east-1:028417007472:table/cbdfs-*/index/*
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: arn:aws:s3:::dept-file-system-documents-028417007472/*
+              - Effect: Allow
+                Action:
+                  - cognito-idp:AdminAddUserToGroup
+                  - cognito-idp:AdminRemoveUserFromGroup
+                  - cognito-idp:AdminListGroupsForUser
+                  - cognito-idp:AdminDisableUser
+                  - cognito-idp:AdminCreateUser
+                Resource: arn:aws:cognito-idp:us-east-1:028417007472:userpool/us-east-1_O9B0oWl3v
+              - Effect: Allow
+                Action: ses:SendEmail
+                Resource: '*'
 
   # ── Lambda Functions ───────────────────────────────────────────
   PostConfirmationFunction:
@@ -216,21 +93,7 @@ Resources:
       FunctionName: cbdfs-post-confirmation
       CodeUri: ../backend/
       Handler: functions/auth/postConfirmation.handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UsersTable
-        - Statement:
-            Effect: Allow
-            Action: cognito-idp:AdminAddUserToGroup
-            Resource: !GetAtt UserPool.Arn
-
-  PostConfirmationInvokePermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt PostConfirmationFunction.Arn
-      Principal: cognito-idp.amazonaws.com
-      SourceArn: !GetAtt UserPool.Arn
+      Role: !GetAtt LambdaRole.Arn
 
   GetUploadUrlFunction:
     Type: AWS::Serverless::Function
@@ -238,13 +101,7 @@ Resources:
       FunctionName: cbdfs-get-upload-url
       CodeUri: ../backend/
       Handler: functions/files/getUploadUrl.handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DocumentsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref AuditLogTable
-        - S3WritePolicy:
-            BucketName: !Ref DocumentsBucket
+      Role: !GetAtt LambdaRole.Arn
       Events:
         Api:
           Type: Api
@@ -258,11 +115,7 @@ Resources:
       FunctionName: cbdfs-list-files
       CodeUri: ../backend/
       Handler: functions/files/listFiles.handler
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref DocumentsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref SharedDocumentsTable
+      Role: !GetAtt LambdaRole.Arn
       Events:
         Api:
           Type: Api
@@ -276,15 +129,7 @@ Resources:
       FunctionName: cbdfs-get-download-url
       CodeUri: ../backend/
       Handler: functions/files/getDownloadUrl.handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DocumentsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref AuditLogTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref SharedDocumentsTable
-        - S3ReadPolicy:
-            BucketName: !Ref DocumentsBucket
+      Role: !GetAtt LambdaRole.Arn
       Events:
         Api:
           Type: Api
@@ -298,13 +143,7 @@ Resources:
       FunctionName: cbdfs-delete-file
       CodeUri: ../backend/
       Handler: functions/files/deleteFile.handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DocumentsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref AuditLogTable
-        - S3CrudPolicy:
-            BucketName: !Ref DocumentsBucket
+      Role: !GetAtt LambdaRole.Arn
       Events:
         Api:
           Type: Api
@@ -318,17 +157,7 @@ Resources:
       FunctionName: cbdfs-share-file
       CodeUri: ../backend/
       Handler: functions/files/shareFile.handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DocumentsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref AuditLogTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SharedDocumentsTable
-        - Statement:
-            Effect: Allow
-            Action: ses:SendEmail
-            Resource: '*'
+      Role: !GetAtt LambdaRole.Arn
       Events:
         Api:
           Type: Api
@@ -342,9 +171,7 @@ Resources:
       FunctionName: cbdfs-departments
       CodeUri: ../backend/
       Handler: functions/departments/index.handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DepartmentsTable
+      Role: !GetAtt LambdaRole.Arn
       Events:
         GetDepts:
           Type: Api
@@ -373,18 +200,7 @@ Resources:
       FunctionName: cbdfs-users
       CodeUri: ../backend/
       Handler: functions/users/index.handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UsersTable
-        - Statement:
-            Effect: Allow
-            Action:
-              - cognito-idp:AdminAddUserToGroup
-              - cognito-idp:AdminRemoveUserFromGroup
-              - cognito-idp:AdminListGroupsForUser
-              - cognito-idp:AdminDisableUser
-              - cognito-idp:AdminCreateUser
-            Resource: !GetAtt UserPool.Arn
+      Role: !GetAtt LambdaRole.Arn
       Events:
         GetUsers:
           Type: Api
@@ -408,9 +224,7 @@ Resources:
       FunctionName: cbdfs-audit
       CodeUri: ../backend/
       Handler: functions/audit/index.handler
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref AuditLogTable
+      Role: !GetAtt LambdaRole.Arn
       Events:
         GetAudit:
           Type: Api
@@ -422,12 +236,3 @@ Outputs:
   ApiUrl:
     Description: API Gateway endpoint URL
     Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
-  UserPoolId:
-    Description: Cognito User Pool ID
-    Value: !Ref UserPool
-  UserPoolClientId:
-    Description: Cognito App Client ID
-    Value: !Ref UserPoolClient
-  DocumentsBucketName:
-    Description: S3 bucket for documents
-    Value: !Ref DocumentsBucket

@@ -3,15 +3,15 @@
 const awsConfig = {
   Auth: {
     Cognito: {
-      userPoolId: 'REPLACE_WITH_USER_POOL_ID',
-      userPoolClientId: 'REPLACE_WITH_APP_CLIENT_ID',
+      userPoolId: 'us-east-1_O9B0oWl3v',
+      userPoolClientId: '49fmgmo72hgprlenovh243ktc0',
       region: 'us-east-1',
     }
   },
   API: {
     REST: {
       cbdfsApi: {
-        endpoint: 'REPLACE_WITH_API_GATEWAY_URL',
+        endpoint: 'https://7nn7l376z3.execute-api.us-east-1.amazonaws.com/Prod',
         region: 'us-east-1',
       }
     }
